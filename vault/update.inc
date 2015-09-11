@@ -23,10 +23,8 @@
  that this script utilises, without which, the script would likely not exist,
  or at best, would have very limited value <http://www.clamav.net/>.
 
- Special thanks to Sourceforge and GitHub for hosting the project files,
- located at <http://phpmussel.sourceforge.net/> and
- <https://github.com/Maikuolan/phpMussel/>, to Spambot Security for hosting
- the phpMussel discussion forums, located at
+ Special thanks to Sourceforge and GitHub for hosting the project files, to
+ Spambot Security for hosting the phpMussel discussion forums, located at
  <http://www.spambotsecurity.com/forum/viewforum.php?f=55>, and to the
  additional sources of a number of the signatures utilised by phpMussel:
  SecuriteInfo.com <http://www.securiteinfo.com/>, PhishTank
@@ -39,7 +37,7 @@
  - GitHub <https://github.com/Maikuolan/phpMussel/>.
 
                                      ~ ~ ~
- This File: phpMussel v0.6i.0f (7th June 2015) Update Script.
+ This File: phpMussel v0.7a (13th August 2015) Update Script.
  <%phpMussel%/vault/update.inc>
 
                                      ~ ~ ~
@@ -167,10 +165,7 @@ while(true)
 				{
 				foreach($SigFileSet[$k] as $SigFile)$phpmusselversion['request_content'].=$SigFile.'%3AIGNORE%3B';
 				}
-			else
-				{
-				foreach($SigFileSet[$k] as $SigFile)$phpmusselversion['request_content'].=$SigFile.'%3A'.md5(ReadUpdateFile($vault.$SigFile)).'%3B';
-				}
+			else foreach($SigFileSet[$k] as $SigFile)$phpmusselversion['request_content'].=$SigFile.'%3A'.md5(ReadUpdateFile($vault.$SigFile)).'%3B';
 			}
 		next($SigFileSet);
 		$c--;
@@ -181,7 +176,7 @@ while(true)
 		if(!$MusselConfig['attack_specific']['general_commands'])$phpmusselversion['request_content'].='hex_general_commands.csv%3AIGNORE%3B';
 		else $phpmusselversion['request_content'].='hex_general_commands.csv%3A'.md5(ReadUpdateFile($vault.'hex_general_commands.csv')).'%3B';
 		}
-	$phpmusselversion['request_content'].="update.dat%3A".md5(ReadUpdateFile($vault.'update.dat'))."%3B";
+	$phpmusselversion['request_content'].='update.dat%3A'.md5(ReadUpdateFile($vault.'update.dat')).'%3B';
 	for($i=0;$i<$phpmusselversion['update_addresses_count'];$i++)
 		{
 		echo $MusselConfig['lang']['update_fetch'].' http://'.substr($phpmusselversion['update_addresses'][$i],0,(strlen($phpmusselversion['update_addresses'][$i])-strpos($phpmusselversion['update_addresses'][$i],'/'))*-1).'/ ... ';

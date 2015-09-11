@@ -23,10 +23,8 @@
  that this script utilises, without which, the script would likely not exist,
  or at best, would have very limited value <http://www.clamav.net/>.
 
- Special thanks to Sourceforge and GitHub for hosting the project files,
- located at <http://phpmussel.sourceforge.net/> and
- <https://github.com/Maikuolan/phpMussel/>, to Spambot Security for hosting
- the phpMussel discussion forums, located at
+ Special thanks to Sourceforge and GitHub for hosting the project files, to
+ Spambot Security for hosting the phpMussel discussion forums, located at
  <http://www.spambotsecurity.com/forum/viewforum.php?f=55>, and to the
  additional sources of a number of the signatures utilised by phpMussel:
  SecuriteInfo.com <http://www.securiteinfo.com/>, PhishTank
@@ -39,20 +37,19 @@
  - GitHub <https://github.com/Maikuolan/phpMussel/>.
 
                                      ~ ~ ~
- This File: phpMussel Loader File v1.1c.1b (1st June 2015).
+ This File: phpMussel v0.7a (13th August 2015) Loader file.
  <%phpMussel%/phpmussel.php>
 
                                      ~ ~ ~
  Please refer to the README documentation for installation instructions and for
  instructions regarding how to correctly use phpMussel.
 
- In order phpMussel to work effectively on your CMS or website, you must modify
- the $vault variable immediately following this comment section. It should
- match the exact path to the vault directory of phpMussel.
+ You may change any part of phpMussel as you see fit, but you are not required
+ to change anything in this file in order for phpMussel to work effectively.
 
 */
 
-$vault='/your_user/public_html/some_dir/phpmussel/vault/';
+$vault=@(__DIR__==='__DIR__')?dirname(__FILE__).'/vault/':__DIR__.'/vault/';
 
 if(!function_exists('plaintext_echo_die')){function plaintext_echo_die($out){header('Content-Type: text/plain');echo $out;die;}}
 
@@ -64,7 +61,8 @@ if(!defined('phpMussel'))
 	$MusselConfig=@(!file_exists($vault.'phpmussel.ini'))?false:parse_ini_file($vault.'phpmussel.ini',true);
 	if(!is_array($MusselConfig))plaintext_echo_die('[phpMussel] Could not read phpmussel.ini: Can\'t continue. Refer to documentation if this is a first-time run, and if problems persist, seek assistance.');
 	if(!file_exists($vault.'lang.inc'))plaintext_echo_die('[phpMussel] Language data file missing! Please reinstall phpMussel.');
-	require($vault.'lang.inc');
+	require $vault.'lang.inc';
+	if(!isset($MusselConfig['general']['cleanup']))$MusselConfig['general']['cleanup']=1;
 	$disable_lock=file_exists($vault.'disable.lck');
 	if(!$disable_lock)
 		{
@@ -74,7 +72,7 @@ if(!defined('phpMussel'))
 			{
 			sleep(2);
 			$update_lock=file_exists($vault.'update.lck');
-			if((time()-$update_timer)>9)plaintext_echo_die('[phpMussel] Update lock detected: Can\'t continue. Check for corrupt updates or try again later.');
+			if((time()-$update_timer)>12)plaintext_echo_die('[phpMussel] '.$MusselConfig['lang']['update_lock_detected']);
 			}
 		unset($update_timer,$update_lock);
 		}
@@ -83,17 +81,17 @@ if(!defined('phpMussel'))
 		parse_str($_SERVER['QUERY_STRING'],$query);
 		if(!isset($_POST['phpmussel']))$_POST['phpmussel']=false;
 		if(!isset($query['phpmussel']))$query['phpmussel']=false;
+		if(!$phpmussel=$_POST['phpmussel'])if(!$phpmussel=$query['phpmussel'])$phpmussel=false;
 		if(!isset($_POST['pword']))$_POST['pword']=false;
 		if(!isset($query['pword']))$query['pword']=false;
+		if(!$pword=$_POST['pword'])if(!$pword=$query['pword'])$pword=false;
 		if(!isset($_POST['logspword']))$_POST['logspword']=false;
 		if(!isset($query['logspword']))$query['logspword']=false;
+		if(!$logspword=$_POST['logspword'])if(!$logspword=$query['logspword'])$logspword=false;
 		if(!isset($_POST['musselvar']))$_POST['musselvar']=false;
 		if(!isset($query['musselvar']))$query['musselvar']=false;
-		if(!$phpmussel=$_POST['phpmussel'])if(!$phpmussel=$query['phpmussel'])$phpmussel=false;
-		if(!$pword=$_POST['pword'])if(!$pword=$query['pword'])$pword=false;
-		if(!$logspword=$_POST['logspword'])if(!$logspword=$query['logspword'])$logspword=false;
 		if(!$musselvar=$_POST['musselvar'])if(!$musselvar=$query['musselvar'])$musselvar=false;
-		if(!isset($MusselConfig['general']['script_password']))$MusselConfig['general']['script_password']='';
+		if(!isset($MusselConfig['general']['logs_password']))$MusselConfig['general']['logs_password']='';
 		if(!empty($MusselConfig['general']['logs_password'])&&!empty($phpmussel)&&!empty($logspword))
 			{
 			if($logspword!==$MusselConfig['general']['logs_password'])plaintext_echo_die('[phpMussel] '.$MusselConfig['lang']['wrong_password']);
@@ -126,10 +124,11 @@ if(!defined('phpMussel'))
 				$controls_lockout=fopen($vault.'controls.lck','a');
 				fwrite($controls_lockout,'');
 				fclose($controls_lockout);
-				plaintext_echo_die('[phpMussel] phpMussel controls lockout enabled.');
+				plaintext_echo_die('[phpMussel] '.$MusselConfig['lang']['controls_lockout']);
 				}
-			plaintext_echo_die('[phpMussel] I don\'t understand that command, sorry.');
+			plaintext_echo_die('[phpMussel] '.$MusselConfig['lang']['bad_command']);
 			}
+		if(!isset($MusselConfig['general']['script_password']))$MusselConfig['general']['script_password']='';
 		if(!empty($MusselConfig['general']['script_password'])&&!empty($phpmussel)&&!empty($pword))
 			{
 			if($pword!==$MusselConfig['general']['script_password'])plaintext_echo_die('[phpMussel] '.$MusselConfig['lang']['wrong_password']);
@@ -140,20 +139,20 @@ if(!defined('phpMussel'))
 					$disable_lock=fopen($vault.'disable.lck','a');
 					fwrite($disable_lock,'');
 					fclose($disable_lock);
-					plaintext_echo_die('[phpMussel] phpMussel disabled.');
+					plaintext_echo_die('[phpMussel] '.$MusselConfig['lang']['phpmussel_disabled']);
 					}
-				plaintext_echo_die('[phpMussel] phpMussel already disabled.');
+				plaintext_echo_die('[phpMussel] '.$MusselConfig['lang']['phpmussel_disabled_already']);
 				}
 			if($phpmussel=='enable')
 				{
-				if(!$disable_lock)plaintext_echo_die('[phpMussel] phpMussel already enabled.');
+				if(!$disable_lock)plaintext_echo_die('[phpMussel] '.$MusselConfig['lang']['phpmussel_enabled_already']);
 				$disable_lock=@unlink($vault.'disable.lck');
-				plaintext_echo_die('[phpMussel] phpMussel enabled.');
+				plaintext_echo_die('[phpMussel] '.$MusselConfig['lang']['phpmussel_enabled']);
 				}
 			if($phpmussel=='update')
 				{
 				if(!file_exists($vault.'update.inc'))plaintext_echo_die('[phpMussel]'.$MusselConfig['lang']['update_scriptfile_missing']);
-				require($vault.'update.inc');
+				require $vault.'update.inc';
 				die;
 				}
 			if($phpmussel=='greylist')
@@ -166,9 +165,9 @@ if(!defined('phpMussel'))
 					fwrite($greylistf,$greylist);
 					fclose($greylistf);
 					unset($greylistf,$greylist);
-					plaintext_echo_die('[phpMussel] Greylist updated.');
+					plaintext_echo_die('[phpMussel]'.$MusselConfig['lang']['greylist_updated']);
 					}
-				plaintext_echo_die('[phpMussel] Greylist not updated.');
+				plaintext_echo_die('[phpMussel]'.$MusselConfig['lang']['greylist_not_updated']);
 				}
 			if($phpmussel=='greylist_clear')
 				{
@@ -177,7 +176,7 @@ if(!defined('phpMussel'))
 				fwrite($greylistf,',');
 				fclose($greylistf);
 				unset($greylistf,$greylist);
-				plaintext_echo_die('[phpMussel] Greylist cleared.');
+				plaintext_echo_die('[phpMussel]'.$MusselConfig['lang']['greylist_cleared']);
 				}
 			if($phpmussel=='greylist_show')
 				{
@@ -191,19 +190,19 @@ if(!defined('phpMussel'))
 				$controls_lockout=fopen($vault.'controls.lck','a');
 				fwrite($controls_lockout,'');
 				fclose($controls_lockout);
-				plaintext_echo_die('[phpMussel] phpMussel controls lockout enabled.');
+				plaintext_echo_die('[phpMussel] '.$MusselConfig['lang']['controls_lockout']);
 				}
-			plaintext_echo_die('[phpMussel] I don\'t understand that command, sorry.');
+			plaintext_echo_die('[phpMussel] '.$MusselConfig['lang']['bad_command']);
 			}
 		}
 	if(!$disable_lock)
 		{
-		if(!file_exists($vault.'phpmussel.inc'))plaintext_echo_die('[phpMussel] Core script file missing! Please reinstall phpMussel.');
-		require($vault.'phpmussel.inc');
+		if(!file_exists($vault.'phpmussel.inc'))plaintext_echo_die('[phpMussel] '.$MusselConfig['lang']['core_scriptfile_missing']);
+		require $vault.'phpmussel.inc';
 		}
 	$display_errors=error_reporting($display_errors);
 	if($MusselConfig['general']['cleanup'])unset($musselvar,$logspword,$pword,$phpmussel,$MusselConfig,$disable_lock,$display_errors,$vault);
 	}
-else plaintext_echo_die('[phpMussel] Instance already active! Please double-check your hooks.');
+else (!isset($MusselConfig['lang']['instance_already_active']))?plaintext_echo_die('[phpMussel] Instance already active! Please double-check your hooks.'):plaintext_echo_die('[phpMussel] '.$MusselConfig['lang']['instance_already_active']);
 
 ?>
